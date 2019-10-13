@@ -27,14 +27,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class CalcProb extends Configured implements Tool {
+    private static int numTerms = 8000;
     private static final Logger LOG = LoggerFactory.getLogger(CalcProb.class);
-    private static int numTerms = 5000;
+    // 44 * sqrt(tokenNum)
 
     static class ProbMapper extends Mapper<TextPair, IntWritable, Text, TextIntPair> {
         @Override
@@ -75,14 +74,13 @@ public class CalcProb extends Configured implements Tool {
         @Override
         protected void reduce(Text key, Iterable<TextIntPair> values, Context context) throws IOException, InterruptedException {
             int numTokens = 0;
-            List<TextIntPair> pairs = new ArrayList<>();
             Map<String, Double> weights = new HashMap<>();
             for (TextIntPair pair : values) {
                 numTokens += pair.getSecond().get();
                 weights.put(pair.getFirst().toString(), (double) pair.getSecond().get());
             }
-            for (String wkey : weights.keySet()) {
-                weights.put(wkey, Math.log((weights.get(wkey)+1d)/(numTokens+numTerms)));
+            for (String wKey : weights.keySet()) {
+                weights.put(wKey, Math.log((weights.get(wKey)+1d)/(numTokens+numTerms)));
             }
             FileStatus[] statuses = fs.globStatus(new Path(testSuite));
             for (FileStatus status : statuses) {
@@ -103,6 +101,8 @@ public class CalcProb extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
+        numTerms = WordCount.numCount == 0 ? 3000 : (int) (22 * Math.sqrt(WordCount.numCount));
+        LOG.info("estimated vocabulary size: {}", numTerms);
         Configuration conf = getConf();
         Job job = Job.getInstance(conf);
 
@@ -121,6 +121,7 @@ public class CalcProb extends Configured implements Tool {
 
         FileInputFormat.addInputPath(job, new Path("Outputs/wordcount/*"));
         FileOutputFormat.setOutputPath(job, new Path("Outputs/probs"));
+
         return job.waitForCompletion(false) ? 1 : 0;
     }
 }

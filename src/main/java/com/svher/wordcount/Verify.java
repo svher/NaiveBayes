@@ -38,6 +38,7 @@ public class Verify extends Configured implements Tool {
 
         FileInputFormat.addInputPath(job, new Path("Outputs/probs/seq*"));
         FileOutputFormat.setOutputPath(job, new Path("Outputs/final"));
+
         return job.waitForCompletion(false) ? 1 : 0;
     }
 

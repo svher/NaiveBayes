@@ -4,18 +4,15 @@ import com.svher.util.TextPair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.lib.MultipleOutputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.slf4j.Logger;
@@ -39,6 +36,7 @@ public class WordCount extends Configured implements Tool {
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+            context.getCounter("count", "total").increment(1);
             context.write(new TextPair(className, value), new IntWritable(1));
         }
     }
@@ -55,6 +53,7 @@ public class WordCount extends Configured implements Tool {
         }
     }
 
+    static long numCount = 0;
 
     public int run(String[] args) throws Exception {
         Configuration conf = getConf();
@@ -70,6 +69,8 @@ public class WordCount extends Configured implements Tool {
 
         FileInputFormat.addInputPath(job, new Path("etc/Data/*"));
         FileOutputFormat.setOutputPath(job, new Path("Outputs/wordcount"));
-        return job.waitForCompletion(false) ? 1 : 0;
+        int ret = job.waitForCompletion(false) ? 1 : 0;
+        numCount = job.getCounters().findCounter("count", "total").getValue();
+        return ret;
     }
 }
