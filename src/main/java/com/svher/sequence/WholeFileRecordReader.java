@@ -9,7 +9,6 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import sun.jvm.hotspot.runtime.Bytes;
 
 import java.io.IOException;
 import java.io.InputStream;
