@@ -16,20 +16,22 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         if (args.length >= 3 && args[2].equals("local")) {
-            Files.walkFileTree(Paths.get("Outputs"), new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.deleteIfExists(dir);
-                    return FileVisitResult.CONTINUE;
-                }
+            if (Files.exists(Paths.get(args[1]))) {
+                Files.walkFileTree(Paths.get(args[1]), new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        Files.deleteIfExists(dir);
+                        return FileVisitResult.CONTINUE;
+                    }
 
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Files.deleteIfExists(file);
-                    return FileVisitResult.CONTINUE;
-                }
-            });
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        Files.deleteIfExists(file);
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
         }
-        ToolRunner.run(new WordCount(), args);
+        ToolRunner.run(new SmallFilesToSequenceFileConverter(), args);
     }
 }
