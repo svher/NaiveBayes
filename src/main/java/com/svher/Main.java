@@ -1,14 +1,14 @@
 package com.svher;
 
+import com.svher.sequence.SmallFilesToSequenceFileConverter;
+import com.svher.wordcount.WordCount;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Properties;
 
 
 public class Main {
@@ -32,6 +32,6 @@ public class Main {
                 });
             }
         }
-        ToolRunner.run(new SmallFilesToSequenceFileConverter(), args);
+        ToolRunner.run(new WordCount(), args);
     }
 }
