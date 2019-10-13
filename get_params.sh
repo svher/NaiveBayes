@@ -1,4 +1,4 @@
-if [ -z $1 ]; then
+if [ -z "$1" ]; then
 echo "usage: ./get_params.sh [dataset]"
 exit
 fi
