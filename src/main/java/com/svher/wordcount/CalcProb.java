@@ -43,14 +43,29 @@ public class CalcProb extends Configured implements Tool {
     }
 
     static class ProbReducer extends Reducer<Text, TextIntPair, TextPair, DoubleWritable> {
-        private static String testSuite = "etc/Test/*/*";
         FileSystem fs;
         MultipleOutputs<TextPair, DoubleWritable> multipleOutputs;
+        Map<String, Map<String, Integer>> testSet;
 
         @Override
         protected void setup(Context context) throws IOException {
             multipleOutputs = new MultipleOutputs<>(context);
-            fs = FileSystem.get(URI.create(testSuite), context.getConfiguration());
+            fs = FileSystem.get(URI.create(""), context.getConfiguration());
+
+            testSet = new HashMap<>();
+            FileStatus[] statuses = fs.globStatus(new Path("etc/Test/*/*"));
+            for (FileStatus status : statuses) {
+                Path path = status.getPath();
+                Map<String, Integer> testDocument = new HashMap<>();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(path)))) {
+                    String line = reader.readLine();
+                    while(line != null) {
+                        testDocument.put(line, testDocument.getOrDefault(line, 0)+1);
+                        line = reader.readLine();
+                    }
+                }
+                testSet.put(path.getParent().getName()+"#"+path.getName(), testDocument);
+            }
 
             /* 还是不加先验概率，因为有部分类别数量极少
             Map<String, Double> priorProb = new HashMap<>();
@@ -82,19 +97,14 @@ public class CalcProb extends Configured implements Tool {
             for (String wKey : weights.keySet()) {
                 weights.put(wKey, Math.log((weights.get(wKey)+1d)/(numTokens+numTerms)));
             }
-            FileStatus[] statuses = fs.globStatus(new Path(testSuite));
-            for (FileStatus status : statuses) {
+            for (String doc : testSet.keySet()) {
                 double prob = 0;
-                Path path = status.getPath();
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(path)))) {
-                    String line = reader.readLine();
-                    while(line != null) {
-                        prob += weights.getOrDefault(line, Math.log(1d/numTerms));
-                        line = reader.readLine();
-                    }
-                    multipleOutputs.write(new TextPair(new Text(path.getParent().getName()+"#"+path.getName()), key), new DoubleWritable(prob), "seq");
-                    // multipleOutputs.write("plain", key, new DoubleWritable(prob), path.getParent().getName()+"#"+path.getName());
+                Map<String, Integer> testDoc = testSet.get(doc);
+                for (String term : testDoc.keySet()) {
+                    prob += weights.getOrDefault(term, testDoc.get(term)*Math.log(1d/numTerms));
                 }
+                multipleOutputs.write(new TextPair(new Text(doc), key), new DoubleWritable(prob), "seq");
+                // multipleOutputs.write("plain", key, new DoubleWritable(prob), path.getParent().getName()+"#"+path.getName());
             }
         }
     }

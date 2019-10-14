@@ -25,8 +25,8 @@ public class Main {
     public static void main(String[] args) throws Exception {
         if (args.length >= 1 && args[0].equals("local")) {
             Utils.deleteRecursive("Outputs");
-            Utils.deleteRecursive("Outputs/probs");
-            Utils.deleteRecursive("Outputs/final");
+//            Utils.deleteRecursive("Outputs/probs");
+//            Utils.deleteRecursive("Outputs/final");
         }
 
         ToolRunner.run(new WordCount(), args);
@@ -65,6 +65,7 @@ public class Main {
         double precision = tp_val+tn_val==0 ? 1 : (double)tp_val/(tp_val+tn_val);
         double recall = tp_val+fn_val==0 ? 1 : (double) tp_val/(tp_val+fn_val);
         f1 = (2*precision*recall)/(precision+recall);
+        LOG.info("precision: {} recall: {}", precision, recall);
         LOG.info("f1: {}", f1);
     }
 }
