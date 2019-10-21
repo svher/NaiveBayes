@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +40,6 @@ public class Main {
         Map<String, Integer> tn = new HashMap<>();
         Map<String, Integer> fn = new HashMap<>();
         for (FileStatus status : statuses) {
-            double prob = 0;
             Path path = status.getPath();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(path)))) {
                 String line = reader.readLine();
@@ -55,17 +55,20 @@ public class Main {
                 }
             }
         }
-        double f1;
-        int tp_val = 0, tn_val = 0, fn_val = 0;
+        double f1 = 0;
+
+        DecimalFormat df = new DecimalFormat("0.00");
+
         for (String classKey : tp.keySet()) {
-            tp_val += tp.getOrDefault(classKey, 0);
-            tn_val += tn.getOrDefault(classKey, 0);
-            fn_val += fn.getOrDefault(classKey, 0);
+            int tp_val = tp.getOrDefault(classKey, 0);
+            int tn_val = tn.getOrDefault(classKey, 0);
+            int fn_val = fn.getOrDefault(classKey, 0);
+            double precision = tp_val+tn_val==0 ? 1 : (double)tp_val/(tp_val+tn_val);
+            double recall = tp_val+fn_val==0 ? 1 : (double) tp_val/(tp_val+fn_val);
+            f1 += (2*precision*recall)/(precision+recall);
+            LOG.info("class: {}\tprecision: {} recall: {}", classKey, df.format(precision), df.format(recall));
         }
-        double precision = tp_val+tn_val==0 ? 1 : (double)tp_val/(tp_val+tn_val);
-        double recall = tp_val+fn_val==0 ? 1 : (double) tp_val/(tp_val+fn_val);
-        f1 = (2*precision*recall)/(precision+recall);
-        LOG.info("precision: {} recall: {}", precision, recall);
-        LOG.info("f1: {}", f1);
+        f1 = f1/tp.size();
+        LOG.info("f1: {}", df.format(f1));
     }
 }

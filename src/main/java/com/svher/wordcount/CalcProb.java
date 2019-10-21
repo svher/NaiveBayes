@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CalcProb extends Configured implements Tool {
-    private static int numTerms = 8000;
+    private static int numTerms = 20000;
     private static final Logger LOG = LoggerFactory.getLogger(CalcProb.class);
     // 44 * sqrt(tokenNum)
 
@@ -46,6 +46,7 @@ public class CalcProb extends Configured implements Tool {
         FileSystem fs;
         MultipleOutputs<TextPair, DoubleWritable> multipleOutputs;
         Map<String, Map<String, Integer>> testSet;
+        Map<String, Double> priorProb;
 
         @Override
         protected void setup(Context context) throws IOException {
@@ -67,8 +68,7 @@ public class CalcProb extends Configured implements Tool {
                 testSet.put(path.getParent().getName()+"#"+path.getName(), testDocument);
             }
 
-            /* 还是不加先验概率，因为有部分类别数量极少
-            Map<String, Double> priorProb = new HashMap<>();
+            priorProb = new HashMap<>();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(new Path("etc/params"))))) {
                 String line = reader.readLine();
                 int total = Integer.parseInt(line);
@@ -78,7 +78,7 @@ public class CalcProb extends Configured implements Tool {
                     priorProb.put(splits[0], Math.log(Integer.parseInt(splits[1])/(double)total));
                     line = reader.readLine();
                 }
-            } */
+            }
         }
 
         @Override
@@ -111,7 +111,7 @@ public class CalcProb extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        numTerms = WordCount.numCount == 0 ? 3000 : (int) (22 * Math.sqrt(WordCount.numCount));
+        numTerms = WordCount.numCount == 0 ? 3000 : (int) (20 * Math.sqrt(WordCount.numCount));
         LOG.info("estimated vocabulary size: {}", numTerms);
         Configuration conf = getConf();
         Job job = Job.getInstance(conf);
