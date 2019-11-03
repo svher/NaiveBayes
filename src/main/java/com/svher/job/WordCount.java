@@ -49,6 +49,7 @@ public class WordCount extends Configured implements Tool {
         Configuration conf = getConf();
         Job job = Job.getInstance(conf);
 
+        job.setJarByClass(WordCount.class);
         job.setInputFormatClass(CombineTextInputFormatWithFileName.class);
         job.setMapperClass(WordMapper.class);
         job.setReducerClass(WordReducer.class);
