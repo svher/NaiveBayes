@@ -11,7 +11,7 @@ mkdir etc/Test
 for folder in $1/*; do
 if [ -d $folder ]; then
     class=$(basename $folder)
-    # 获得每个分类文件个数，保存到 cnt 中
+    # 获得每个分类文件个数，保存到 numDocuments 变量中
     eval $(ls -l $folder | awk '$0 ~ /.txt/ {a++} END {print "numDocuments="a}')
     if [ $numDocuments -gt 100 ]; then
         mkdir etc/Test/${class}

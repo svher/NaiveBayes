@@ -109,8 +109,10 @@ public class Classify extends Configured implements Tool {
                     String predClass = s0[1];
                     if (trueClass.equals(predClass)) mapTP.put(trueClass, mapTP.getOrDefault(trueClass, 0) + 1);
                     else {
+                        // 对于 False Negative，把对应正确分类的值加 1
                         mapFN.put(trueClass, mapFN.getOrDefault(trueClass, 0) + 1);
-                        mapTN.put(predClass, mapTN.getOrDefault(trueClass, 0) + 1);
+                        // 对于 True Negative，把对应预测分类的值加 1
+                        mapTN.put(predClass, mapTN.getOrDefault(predClass, 0) + 1);
                     }
                     classNames.add(trueClass);
                     classNames.add(predClass);
@@ -125,6 +127,7 @@ public class Classify extends Configured implements Tool {
             double tn = mapTN.getOrDefault(className, 0);
             double fn = mapFN.getOrDefault(className, 0);
             double precision = tp / (tp + tn);
+            // 如果该类别没有相应数据，我们可以认为它的精确度为 1，以下同理
             if (Double.isNaN(precision)) precision = 1;
             double recall = tp / (tp + fn);
             if (Double.isNaN(recall)) recall = 1;
