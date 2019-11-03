@@ -1,5 +1,6 @@
-package com.svher.wordcount;
+package com.svher.job;
 
+import com.svher.format.onlyname.CombineTextInputFormatWithFileName;
 import com.svher.util.TextPair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -23,21 +24,12 @@ import java.io.IOException;
 public class WordCount extends Configured implements Tool {
     private static final Logger LOG = LoggerFactory.getLogger(WordMapper.class);
 
-    static class WordMapper extends Mapper<LongWritable, Text, TextPair, IntWritable> {
-
-        private Text className = new Text();
+    static class WordMapper extends Mapper<Text, Text, TextPair, IntWritable> {
 
         @Override
-        protected void setup(Context context) throws IOException, InterruptedException {
-            FileSplit split = (FileSplit) context.getInputSplit();
-            className.set(split.getPath().getName());
-            super.setup(context);
-        }
-
-        @Override
-        protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+        protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
             context.getCounter("count", "total").increment(1);
-            context.write(new TextPair(className, value), new IntWritable(1));
+            context.write(new TextPair(key, value), new IntWritable(1));
         }
     }
 
@@ -53,24 +45,20 @@ public class WordCount extends Configured implements Tool {
         }
     }
 
-    static long numCount = 0;
-
     public int run(String[] args) throws Exception {
         Configuration conf = getConf();
         Job job = Job.getInstance(conf);
 
+        job.setInputFormatClass(CombineTextInputFormatWithFileName.class);
         job.setMapperClass(WordMapper.class);
         job.setReducerClass(WordReducer.class);
         job.setCombinerClass(WordReducer.class);
 
         job.setOutputKeyClass(TextPair.class);
         job.setOutputValueClass(IntWritable.class);
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         FileInputFormat.addInputPath(job, new Path("etc/Data/*"));
         FileOutputFormat.setOutputPath(job, new Path("Outputs/wordcount"));
-        int ret = job.waitForCompletion(false) ? 1 : 0;
-        numCount = job.getCounters().findCounter("count", "total").getValue();
-        return ret;
+        return job.waitForCompletion(false) ? 1 : 0;
     }
 }
