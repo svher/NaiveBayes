@@ -72,6 +72,7 @@ public class Classify extends Configured implements Tool {
         Configuration conf = getConf();
         Job job = Job.getInstance(conf);
 
+        job.setJarByClass(Classify.class);
         job.setInputFormatClass(CombineTextInputFormatWithFileName.class);
         job.setMapperClass(ClassifyMapper.class);
         job.setReducerClass(ClassifyReducer.class);
